@@ -7,10 +7,7 @@ DB_MONGO = process.env.CONNECTION;
 // DB_MONGO = process.env.CONNECTIONLOCAL;
 const connectDb = async () => {
   try {
-    await mongoose.connect(DB_MONGO, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(DB_MONGO);
     console.log("Base de Datos Conectada");
   } catch (error) {
     console.log(error);

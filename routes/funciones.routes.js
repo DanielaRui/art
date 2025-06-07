@@ -18,26 +18,153 @@ const password = '874F1AB5-6774-2CAC-1C7C-AC842085EEAB';
 
 
 router.post('/confirmation', async (req, res) => {
-    let { code } = req.body;
-
-    console.log(code);
+    const { code } = req.body;
 
     try {
-        let user = await Usuario.findOne({ code: code });
+        const user = await Usuario.findOne({ code });
 
         if (!user) {
-            return res.send('<script>alert("Código inválido"); window.location.href = "/confirmation";</script>');
+            return res.status(400).json({ success: false, message: "Código inválido" });
         }
 
+        await Usuario.updateOne({ code }, { $set: { code_confirmed: true } });
 
-        await Usuario.updateOne({ code: code }, { $set: { code_confirmed: true } });
-
+        // Para pruebas, puedes verificar que el mensaje esté en el HTML renderizado
         return res.render("formularios/login", { mensaje: "El usuario ha sido creado satisfactoriamente" });
+
     } catch (error) {
         console.error("Error during confirmation process:", error);
-        return res.status(500).send('<script>alert("Ocurrió un error. Por favor, inténtalo de nuevo."); window.location.href = "/confirmation";</script>');
+        return res.status(500).json({ success: false, message: "Error del servidor" });
     }
 });
+
+
+
+// router.post('/confirmation', async (req, res) => {
+//     let { code } = req.body;
+
+//     console.log(code);
+
+//     try {
+//         let user = await Usuario.findOne({ code: code });
+
+//         if (!user) {
+//             return res.send('<script>alert("Código inválido"); window.location.href = "/confirmation";</script>');
+//         }
+
+
+//         await Usuario.updateOne({ code: code }, { $set: { code_confirmed: true } });
+
+//         return res.render("formularios/login", { mensaje: "El usuario ha sido creado satisfactoriamente" });
+//     } catch (error) {
+//         console.error("Error during confirmation process:", error);
+//         return res.status(500).send('<script>alert("Ocurrió un error. Por favor, inténtalo de nuevo."); window.location.href = "/confirmation";</script>');
+//     }
+// });
+
+
+router.post('/user', upload.single('Foto'), async (req, res) => {
+    try {
+        const {
+            Nombre, Apellidos, Correo, Telefono,
+            Password, ConfirmarPassword,
+            PreguntaSeguridad, RespuestaSeguridad
+        } = req.body;
+        let Foto;
+
+        if (req.file) {
+            Foto = req.file.buffer.toString('base64');
+        } else {
+            const defaultImagePath = path.join(__dirname, '..', 'public', 'assets', 'user_Default.png');
+            const defaultImageBuffer = fs.readFileSync(defaultImagePath);
+            Foto = defaultImageBuffer.toString('base64');
+        }
+
+        let regexPass = /^[a-zA-Z0-9!#$%&\/?\\¿¡+*~{[^`},;.:_-]*$/;
+        let regexUser = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        let regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!regexUser.test(Nombre) || !regexUser.test(Apellidos)) {
+            return res.status(400).json({ error: "Nombre o Apellidos contienen caracteres no permitidos" });
+        }
+
+        if (!regexCorreo.test(Correo)) {
+            return res.status(400).json({ error: "El correo electrónico no es válido" });
+        }
+
+        if (Password !== ConfirmarPassword) {
+            return res.status(400).json({ error: "Las contraseñas no coinciden" });
+        }
+
+        if (!regexPass.test(Password)) {
+            return res.status(400).json({ error: "La contraseña contiene caracteres no permitidos" });
+        }
+
+        let hash = crypto.createHash('sha1');
+        let data = hash.update(Password, 'utf-8');
+        let gen_hash = data.digest('hex');
+
+        let confirmationCode = Math.floor(10000 + Math.random() * 90000);
+
+        const usuario = new Usuario({
+            nombre: Nombre,
+            apellidos: Apellidos,
+            correo: Correo,
+            telefono: Telefono,
+            password: gen_hash,
+            foto: Foto,
+            code: confirmationCode,
+            code_confirmed: false,
+            preguntaSeguridad: PreguntaSeguridad,
+            respuestaSeguridad: RespuestaSeguridad
+        });
+
+        const NuevoUsuario = await usuario.save();
+
+        const sms = {
+            messages: [
+                {
+                    body: `Tu codigo de confirmacion es: ${confirmationCode}`,
+                    to: `+52${Telefono}`,
+                    from: "{{from}}"
+                }
+            ]
+        };
+
+        try {
+            const response = await axios.post(url, sms, {
+                auth: {
+                    username: username,
+                    password: password
+                }
+            });
+
+            console.log('Respuesta SMS:', response.data);
+            return res.status(201).json({
+                message: "Usuario registrado exitosamente",
+                usuario: {
+                    nombre: NuevoUsuario.nombre,
+                    correo: NuevoUsuario.correo,
+                    telefono: NuevoUsuario.telefono
+                },
+                sms: response.data
+            });
+        } catch (error) {
+            console.error('Error enviando SMS:', error);
+            return res.status(500).json({ error: "Usuario registrado, pero ocurrió un error al enviar el SMS" });
+        }
+
+    } catch (error) {
+        if (error.code === 11000) {
+            const campoDuplicado = Object.keys(error.keyPattern)[0];
+            return res.status(409).json({ error: `El campo ${campoDuplicado} ya está registrado` });
+        } else {
+            console.error("Error en el servidor:", error);
+            return res.status(500).json({ error: "Error interno del servidor", detalle: error.message });
+        }
+    }
+});
+
 
 
 router.post('/database/registro', upload.single('Foto'), async (req, res) => {
@@ -132,7 +259,35 @@ router.post('/database/registro', upload.single('Foto'), async (req, res) => {
 });
 
 
+router.post('/api/login', async (req, res) => {
+    try {
+        const { Correo, Password } = req.body;
+        const regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+        if (!regexCorreo.test(Correo)) {
+            return res.status(400).json({ success: false, message: "Correo inválido" });
+        }
+
+        const usuario = await Usuario.findOne({ correo: Correo });
+        if (!usuario) {
+            return res.status(403).json({ success: false, message: "Cuenta no confirmada" });
+        }
+
+        if (!usuario.code_confirmed) {
+            return res.status(403).json({ success: false, message: "Cuenta no confirmada" });
+        }
+
+        const hash = crypto.createHash('sha1').update(Password, 'utf-8').digest('hex');
+        if (hash !== usuario.password) {
+            return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
+        }
+
+        return res.status(200).json({ success: true, usuario: { correo: usuario.correo, nombre: usuario.nombre } });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 
 router.post('/database/login', async (req, res) => {
@@ -182,7 +337,7 @@ router.get('/database/imagenes', async (req, res) => {
         const imagenes = await Imagen.find();
         res.status(200).json(imagenes);
     } catch (error) {
-        return res.render("error", { message: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
