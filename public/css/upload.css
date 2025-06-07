@@ -1,0 +1,130 @@
+/* Formato del contenedor de carga de imágenes */
+.upload__container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0px 0;
+    margin-bottom: 20px;
+}
+
+.upload__container h2 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.upload__container form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload__container input[type="file"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+}
+
+.upload__container button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #5A67D8;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload__container button:hover {
+    background-color: #434190;
+}
+
+
+
+/* Estilo de las tarjetas */
+.card {
+    transition: transform 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    width: 100%;
+    height: 250px;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.card__image--main {
+    width: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.card__icon {
+    position: absolute;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    font-size: 1.2rem;
+    right: 10px;
+    top: 10px;
+    border-radius: 2rem;
+    text-align: center;
+    transition: all 200ms ease-out;
+    z-index: 999 !important;
+    color: #fff;
+}
+
+.card__tags {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    padding-top: 10px;
+    gap: 15px;
+    color: #9b9898 !important;
+    font-size: 0.9rem;
+}
+
+.card__tags-main {
+    position: absolute;
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    padding-top: 10px;
+    gap: 15px;
+    color: #756b6b;
+    font-size: 0.9rem;
+    bottom: 55px;
+    left: 30px;
+    z-index: 40;
+}
+
+
+.card__title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.card__title-main {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    color: #fff !important;
+    z-index: 40;
+    font-weight: 500;
+}

@@ -1,0 +1,59 @@
+<%- include('layouts/header.ejs') -%>
+<body>
+    <%- include('navbar.ejs') -%>
+    <div class="content__header">
+        <form class="search__container">
+            <label class="search__button">
+                <i class="search__icon fa-solid fa-magnifying-glass"><button type="submit"></button></i>
+                <input class="search__input" type="text" placeholder="Busca tus imágenes favoritas">
+            </label>
+        </form>
+    </div>
+    <section class="content">
+        <h1 class="content__main-title">Las mejores fotos</h1>
+        <div class="marquee">
+            <ul class="marquee-content">
+                <li>
+                    <div class="card">
+                        <img class="card__image--main" src="http://localhost:3000/assets/minimalistlandscape.jpg" alt="">
+                        <ul class="card__tags-main">
+                            <li>2025</li>
+                            
+                        </ul>
+                        <h3 class="card__title-main">Landscape</h3>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <h2 class="content__title">Fotos recomendadas para ti</h2>
+        <div class="cards__container" id="cardsContainer">
+
+        </div>
+    </section>
+
+  
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div id="caption"></div>
+    </div>
+
+    <script src="/js/gallery.js"></script>
+    
+</body>
+
+<script>
+    const root = document.documentElement;
+    const marqueeElementsDisplayed = getComputedStyle(root).getPropertyValue(
+    "--marquee-elements-displayed"
+    );
+    const marqueeContent = document.querySelector("ul.marquee-content");
+
+    root.style.setProperty("--marquee-elements", marqueeContent.children.length);
+
+    for (let i = 0; i < marqueeElementsDisplayed; i++) {
+    marqueeContent.appendChild(marqueeContent.children[i].cloneNode(true));
+    }
+
+</script>
+<%- include('layouts/footer.ejs') -%>
